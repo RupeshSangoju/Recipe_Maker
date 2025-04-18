@@ -1,0 +1,47 @@
+.chef-show {
+    text-align: center;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  .recipe-image {
+    margin: 20px 0;
+  }
+  .recipe-text {
+    font-size: 1.2em;   
+    color: #444;
+    line-height: 1.6;
+    margin-top: 20px;
+    padding: 0 20px;
+  }
+  .steps-container {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .step-item {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+  }
+  
+  .step-item:hover {
+    transform: translateY(-5px);
+  }
+  
+  .step-item h3 {
+    color: #ff6f61;
+    margin-bottom: 10px;
+    font-size: 1.3em;
+  }
+  
+  .step-item p {
+    color: #444;
+    font-size: 1.1em;
+    line-height: 1.6;
+  }
