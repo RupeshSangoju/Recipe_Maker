@@ -5,6 +5,7 @@ client/build
 server/images
 server/myenv
 server/node_modules
+server/.env
 # General
 .DS_Store
 *.log
