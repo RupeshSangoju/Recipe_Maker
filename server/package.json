@@ -19,6 +19,7 @@
     "groq-sdk": "^0.19.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
-    "mongoose": "^8.13.2"
+    "mongoose": "^8.13.2",
+    "puppeteer": "^24.8.2"
   }
 }

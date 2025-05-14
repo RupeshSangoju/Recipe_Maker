@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Box,Heading,VStack,Button,Checkbox,Select,HStack,IconButton,Text,Radio,RadioGroup,Stack,} from '@chakra-ui/react';
+import { Box, Heading, VStack, Button, Checkbox, Select, HStack, IconButton, Text, Radio, RadioGroup, Stack, Alert, AlertIcon } from '@chakra-ui/react';
 import { FormControl } from '@chakra-ui/form-control';
 import { Input } from '@chakra-ui/input';
 import { FaPlus, FaTrash, FaUtensils } from 'react-icons/fa';
@@ -17,14 +17,15 @@ function Home() {
   const [ingredients, setIngredients] = useState(['']);
   const [recipe, setRecipe] = useState(null);
   const [steps, setSteps] = useState([]);
+  const [ingredientsList, setIngredientsList] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const [recipeId, setRecipeId] = useState(null);
   const [difficultyMode, setDifficultyMode] = useState(false);
   const [language, setLanguage] = useState('en');
   const [cookingStyle, setCookingStyle] = useState('modern');
   const [servingSize, setServingSize] = useState(2);
-  const [theme, setTheme] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -39,11 +40,9 @@ function Home() {
     { value: 'es', label: 'Spanish' },
     { value: 'fr', label: 'French' },
     { value: 'hi', label: 'Hindi' },
-    {value: 'te', label: 'Telugu'},
   ];
 
   const cookingStyles = ['modern', 'traditional', 'fusion', 'experimental'];
-  const themes = ['', 'Pirate', 'Space', 'Zombie', 'Medieval'];
 
   const addIngredient = () => setIngredients([...ingredients, '']);
   const removeIngredient = (index) => setIngredients(ingredients.filter((_, i) => i !== index));
@@ -59,12 +58,15 @@ function Home() {
       return;
     }
 
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     setLoading(true);
+    setError(null);
     try {
       let response;
       if (mode === 'recipe-name') {
+        console.log('Generating recipe from name with URL:', `${API_URL}/api/generate-from-name`);
         response = await axios.post(
-          `${process.env.REACT_APP_API_URL}api/generate-from-name`,
+          `${API_URL}/api/generate-from-name`,
           {
             recipeName,
             language,
@@ -73,25 +75,28 @@ function Home() {
           { headers: { 'x-user-id': user.userId } }
         );
       } else {
+        console.log('Generating recipe with URL:', `${API_URL}/api/generate-recipe`);
         response = await axios.post(
-          `${process.env.REACT_APP_API_URL}api/generate-recipe`,
+          `${API_URL}/api/generate-recipe`,
           {
             ingredients: ingredients.filter((i) => i.trim() !== ''),
             difficultyMode,
             language,
             cookingStyle,
             servingSize,
-            theme,
           },
           { headers: { 'x-user-id': user.userId } }
         );
       }
+      console.log('Recipe response:', response.data);
       setRecipe(response.data.recipe);
       setSteps(response.data.steps);
-      setImageUrl(response.data.imageUrl);
+      setIngredientsList(response.data.ingredients);
+      setImageUrl(`${API_URL}${response.data.imageUrl}`);
       setRecipeId(response.data.recipeId);
     } catch (error) {
-      console.error('Error fetching recipe:', error);
+      console.error('Error fetching recipe:', error.response?.data || error.message);
+      setError(error.response?.data?.error || 'Failed to generate recipe. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,9 +116,15 @@ function Home() {
       shadow="lg"
     >
       <Heading mb={6} color="brand.100" textAlign="center">
-        Create Your Culinary Masterpiece
+        AI Cooking Chaos Show
       </Heading>
       <VStack spacing={6} align="stretch">
+        {error && (
+          <Alert status="error">
+            <AlertIcon />
+            {error}
+          </Alert>
+        )}
         <RadioGroup onChange={setMode} value={mode} mb={4}>
           <Stack direction="row" spacing={5}>
             <Radio value="recipe-name" colorScheme="green">
@@ -134,7 +145,7 @@ function Home() {
               <Input
                 value={recipeName}
                 onChange={(e) => setRecipeName(e.target.value)}
-                placeholder="E.g., Pirate Chicken Curry"
+                placeholder="E.g., Chicken Curry"
                 variant="filled"
                 bg="gray.800"
                 color="white"
@@ -156,8 +167,8 @@ function Home() {
                   _focus={{ bg: 'gray.700', borderColor: 'green.400' }}
                   sx={{
                     '& > option': {
-                      bg: 'gray.700', // Dropdown options bg
-                      color: 'white', // Dropdown options text
+                      bg: 'gray.700',
+                      color: 'white',
                     },
                   }}
                 >
@@ -286,32 +297,6 @@ function Home() {
                   ))}
                 </Select>
               </Box>
-              <Box flex={1}>
-                <Text fontWeight="bold" mb={2} color="gray.500">
-                  Theme
-                </Text>
-                <Select
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  variant="filled"
-                  bg="gray.800"
-                  color="white"
-                  _hover={{ bg: 'gray.700' }}
-                  _focus={{ bg: 'gray.700', borderColor: 'green.400' }}
-                  sx={{
-                    '& > option': {
-                      bg: 'gray.700',
-                      color: 'white',
-                    },
-                  }}
-                >
-                  {themes.map((t) => (
-                    <option key={t} value={t}>
-                      {t || 'None'}
-                    </option>
-                  ))}
-                </Select>
-              </Box>
             </HStack>
 
             <Box>
@@ -355,9 +340,11 @@ function Home() {
           <ChefShow
             recipe={recipe}
             steps={steps}
+            ingredients={ingredientsList}
             language={language}
             imageUrl={imageUrl}
             recipeId={recipeId}
+            servingSize={servingSize}
           />
         )}
       </VStack>
