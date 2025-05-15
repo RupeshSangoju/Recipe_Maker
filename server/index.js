@@ -7,6 +7,7 @@ const axios = require('axios');
 const puppeteer = require('puppeteer');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 if (!process.env.GROQ_API_KEY) {
@@ -53,22 +54,41 @@ const getUserId = (req, res, next) => {
 async function getDishImage(dishName, recipeId) {
   const outputPath = path.join(__dirname, 'images', `${recipeId}.jpg`);
   try {
-    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
+    // Ensure images directory exists
+    const imagesDir = path.join(__dirname, 'images');
+    if (!fs.existsSync(imagesDir)) {
+      fs.mkdirSync(imagesDir, { recursive: true });
+    }
+
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-dev-shm-usage'],
+      // Use default executable path or Render's cache
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    });
     const page = await browser.newPage();
-    await page.goto(`https://www.google.com/search?hl=en&tbm=isch&q=${encodeURIComponent(dishName)}`, { waitUntil: 'networkidle2' });
+    await page.goto(`https://www.google.com/search?hl=en&tbm=isch&q=${encodeURIComponent(dishName)}`, {
+      waitUntil: 'networkidle2',
+      timeout: 60000, // Increase timeout
+    });
     await page.evaluate(() => window.scrollBy(0, 1000));
     const imageUrl = await page.evaluate(() => {
       const images = document.querySelectorAll('img');
       for (let img of images) {
         const src = img.src;
-        if (src && !src.startsWith('data:image')) return src;
+        if (src && !src.startsWith('data:image') && src.includes('http')) return src;
       }
       return null;
     });
     await browser.close();
-    if (!imageUrl) throw new Error('No image found');
-    const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
-    require('fs').writeFileSync(outputPath, response.data);
+
+    if (!imageUrl) {
+      console.error('No valid image found for:', dishName);
+      throw new Error('No image found');
+    }
+
+    const response = await axios.get(imageUrl, { responseType: 'arraybuffer', timeout: 30000 });
+    fs.writeFileSync(outputPath, response.data);
     const imageUrlPath = `/images/${recipeId}.jpg`;
     console.log(`Generated image URL: ${imageUrlPath}`);
     return imageUrlPath;
