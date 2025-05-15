@@ -61,15 +61,15 @@ async function getDishImage(dishName, recipeId) {
     }
 
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-dev-shm-usage'],
-      // Use default executable path or Render's cache
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      headless: 'new',
+      args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || await puppeteer.executablePath(),
     });
     const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.goto(`https://www.google.com/search?hl=en&tbm=isch&q=${encodeURIComponent(dishName)}`, {
       waitUntil: 'networkidle2',
-      timeout: 60000, // Increase timeout
+      timeout: 60000,
     });
     await page.evaluate(() => window.scrollBy(0, 1000));
     const imageUrl = await page.evaluate(() => {
@@ -83,7 +83,7 @@ async function getDishImage(dishName, recipeId) {
     await browser.close();
 
     if (!imageUrl) {
-      console.error('No valid image found for:', dishName);
+      console.error(`No valid image found for: ${dishName}`);
       throw new Error('No image found');
     }
 
@@ -161,7 +161,7 @@ app.post('/api/generate-recipe', getUserId, async (req, res) => {
       recipe: recipeData.recipe,
       ingredients: recipeData.ingredients,
       steps: formattedSteps,
-      imageUrl,
+      imageUrl: `${process.env.BACKEND_URL || 'https://recipe-maker-ngfo.onrender.com'}${imageUrl}`,
       recipeId: recipe._id,
     });
   } catch (error) {
@@ -228,7 +228,7 @@ app.post('/api/generate-from-name', getUserId, async (req, res) => {
       recipe: recipeData.recipe,
       ingredients: recipeData.ingredients,
       steps: formattedSteps,
-      imageUrl,
+      imageUrl: `${process.env.BACKEND_URL || 'https://recipe-maker-ngfo.onrender.com'}${imageUrl}`,
       recipeId,
     };
 

@@ -92,7 +92,7 @@ function Home() {
       setRecipe(response.data.recipe);
       setSteps(response.data.steps);
       setIngredientsList(response.data.ingredients);
-      setImageUrl(`${API_URL}${response.data.imageUrl}`);
+      setImageUrl(response.data.imageUrl); // Use the full URL from backend
       setRecipeId(response.data.recipeId);
     } catch (error) {
       console.error('Error fetching recipe:', error.response?.data || error.message);
