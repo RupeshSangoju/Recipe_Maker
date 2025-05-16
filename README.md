@@ -18,11 +18,6 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-  - [Running Locally](#running-locally)
-- [Deploying to Render](#deploying-to-render)
-  - [Backend Deployment](#backend-deployment)
-  - [Frontend Deployment](#frontend-deployment)
-- [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
 
