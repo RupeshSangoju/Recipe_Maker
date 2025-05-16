@@ -56,7 +56,7 @@
 
 1. **Clone the Repository**:
    
-   git clone https://github.com/your-username/ai-cooking-chaos-show.git
+   git clone https://github.com/RupeshSangoju/Recipe_Maker
    cd ai-cooking-chaos-show
 
 2. **Set Up Backend:**:
